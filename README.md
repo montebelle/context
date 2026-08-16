@@ -27,4 +27,8 @@ node prompt/scripts/retrieve-cases.js "test" --top 3
 
 A JSON array of scored cases means it works.
 
+## Go-to prompts
+
+[`prompt/PROMPTS.md`](prompt/PROMPTS.md) is a library of named base prompts (`verify-work`, `code-review`, `research`, `logs-audit`, `readme-sync`). Invoke one by slug or intent and the skill expands it and rewrites it grounded to the current repo and harness — no re-pasting. Add or edit entries by editing that file.
+
 See [`prompt/AGENTS.md`](prompt/AGENTS.md) for invocation detail.
