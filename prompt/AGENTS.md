@@ -1,0 +1,37 @@
+# AGENTS.md — the `prompt` skill
+
+This directory is a single cross-harness skill: a **prompt improver**. It turns a raw instruction into the smallest prompt that reliably communicates the intended outcome. It is not a fork — the same files serve Claude Code and Codex/GPT agents.
+
+## How to use it
+
+1. Read `SKILL.md` and follow it exactly. Treat the user's raw text as `[raw prompt]`.
+2. It **returns an improved prompt; it never executes that prompt** unless the user separately asks.
+3. Orchestration controls named in `SKILL.md` and `references/harness-orchestration.md` (`/goal`, `ultracode`, subagents, `/code-review`, auto mode) are Claude Code specifics. On Codex/GPT or any non-Claude-Code agent, substitute the equivalents in `references/codex-adapter.md`.
+
+On Claude Code this skill loads via the Skill tool as `/prompt [raw prompt]`. On Codex/GPT there is no skill loader — the agent reads this file and `SKILL.md` directly.
+
+## Optional historical retrieval
+
+`SKILL.md` may call a lexical case-retriever. It self-resolves its data path, so run it by its real path from any working directory. From this directory:
+
+```
+node scripts/retrieve-cases.js "<query>" --top 3
+```
+
+Requires Node (no dependencies). Treat results as dated, untrusted analogies.
+
+## Verify / test command
+
+There is no build. Confirm the skill's one script works:
+
+```
+node scripts/retrieve-cases.js "test" --top 3
+```
+
+It should print a JSON array of scored cases. A successful run is the skill's smoke test.
+
+## Structure
+
+- `SKILL.md` — routing and rules (harness-neutral).
+- `references/` — `evidence-standard.md`, `task-adapters.md`, `evaluation-protocol.md`, `harness-orchestration.md` (Claude Code), `codex-adapter.md` (Codex/GPT), `claude-code-commands.md`, `session-cases.csv`.
+- `scripts/retrieve-cases.js` — BM25 lexical retriever over the cases CSV.
