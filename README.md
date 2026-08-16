@@ -7,4 +7,24 @@ One skill, two harnesses (not a fork):
 - **Claude Code** — loads via the Skill tool as `/prompt [raw prompt]`.
 - **Codex CLI / GPT agents** — no skill loader; the agent reads [`prompt/SKILL.md`](prompt/SKILL.md) as an instruction file, pointed to by [`prompt/AGENTS.md`](prompt/AGENTS.md). Orchestration controls map to Codex equivalents in [`prompt/references/codex-adapter.md`](prompt/references/codex-adapter.md).
 
-See [`prompt/AGENTS.md`](prompt/AGENTS.md) for invocation and the verify command.
+## Setup
+
+No build and nothing to install — the skill is Markdown plus one dependency-free Node script. Node (any modern version) is needed only for the optional case retriever.
+
+**Claude Code** — symlink the skill into your skills directory (run from the repo root), then it loads as `/prompt`:
+
+```
+ln -sfn "$(pwd)/prompt" ~/.claude/skills/prompt
+```
+
+**Codex CLI / GPT agents** — clone the repo and work inside the tree; [`prompt/AGENTS.md`](prompt/AGENTS.md) is auto-discovered (nearest `AGENTS.md` wins). Point the agent at [`prompt/SKILL.md`](prompt/SKILL.md) and pass your raw text as the `[raw prompt]`.
+
+Verify either install:
+
+```
+node prompt/scripts/retrieve-cases.js "test" --top 3
+```
+
+A JSON array of scored cases means it works.
+
+See [`prompt/AGENTS.md`](prompt/AGENTS.md) for invocation detail.

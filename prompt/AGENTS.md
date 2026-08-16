@@ -2,6 +2,10 @@
 
 This directory is a single cross-harness skill: a **prompt improver**. It turns a raw instruction into the smallest prompt that reliably communicates the intended outcome. It is not a fork — the same files serve Claude Code and Codex/GPT agents.
 
+## Setup
+
+No build or dependencies. Node (any modern version) is required only for the optional retriever below. On Claude Code, symlink this directory to `~/.claude/skills/prompt`. On Codex/GPT, just work inside the repo tree — this file is auto-discovered (nearest `AGENTS.md` wins).
+
 ## How to use it
 
 1. Read `SKILL.md` and follow it exactly. Treat the user's raw text as `[raw prompt]`.
