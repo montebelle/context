@@ -37,5 +37,6 @@ It should print a JSON array of scored cases. A successful run is the skill's sm
 ## Structure
 
 - `SKILL.md` — routing and rules (harness-neutral).
+- `PROMPTS.md` — go-to prompt library: named base prompts (by `##` slug) the skill expands and rewrites on request.
 - `references/` — `evidence-standard.md`, `task-adapters.md`, `evaluation-protocol.md`, `harness-orchestration.md` (Claude Code), `codex-adapter.md` (Codex/GPT), `claude-code-commands.md`, `session-cases.csv`.
 - `scripts/retrieve-cases.js` — BM25 lexical retriever over the cases CSV.

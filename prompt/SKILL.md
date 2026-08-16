@@ -30,6 +30,8 @@ Default to `mode: rewrite`, `depth: standard`, `delivery: auto`, infer the targe
 
 Choose exactly one route before loading references or expanding the request.
 
+**Prompt library.** If the raw input names a go-to prompt by slug (a `##` heading in `PROMPTS.md`, this skill's sibling library) or clearly matches one, load that entry as the base before routing — expand the slug into its canonical body, then rewrite it grounded to the current repo, files, and harness. Never make the user re-paste a library prompt. If a named slug is not found, say so and proceed with the literal input.
+
 ### 1. Literal or grounded follow-up
 
 Use for exact-output probes, a single fully specified approval, or a short follow-up whose referent is singular, fresh, and authorized.
