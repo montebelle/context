@@ -24,11 +24,11 @@ One skill, two harnesses — not a fork. The routing, adapter, evidence, and del
 - **Harness-portable orchestration** — autonomous-run defaults expressed as neutral concepts, bound to Claude Code controls or their Codex/GPT equivalents. → [`prompt/references/harness-orchestration.md`](prompt/references/harness-orchestration.md), [`prompt/references/codex-adapter.md`](prompt/references/codex-adapter.md)
 - **Delivery & truncation guards** — size-aware delivery (inline vs verified file handoff) so a prompt is never silently cut. → [`prompt/SKILL.md`](prompt/SKILL.md)
 - **Go-to prompt library** — named base prompts you invoke by slug; the skill expands and re-grounds them so you never re-paste a wall of text. → [`prompt/PROMPTS.md`](prompt/PROMPTS.md)
-- **BM25 case retriever** — a dependency-free lexical retriever over past session cases, for analogous prior decisions. → [`prompt/scripts/retrieve-cases.js`](prompt/scripts/retrieve-cases.js)
+- **Semantic + lexical case retriever** — ollama (`nomic-embed-text`) embeddings when a local server is reachable, automatic BM25 fallback otherwise; still dependency-free (built-in `fetch`). → [`prompt/scripts/retrieve-cases.js`](prompt/scripts/retrieve-cases.js)
 
 ## Install / Setup
 
-No build, and nothing to compile. The skill is Markdown plus one dependency-free Node script. **Node** (any modern version) is needed only for the optional case retriever.
+No build, and nothing to compile. The skill is Markdown plus one dependency-free Node script. **Node** is needed only for the optional case retriever (Node 18+ for the semantic path; it falls back to lexical on older Node). Semantic retrieval also needs a local **ollama** server with `nomic-embed-text` pulled — entirely optional, the retriever works lexically without it.
 
 **Claude Code** — symlink the skill into your skills directory (run from the repo root), then it loads as `/prompt`:
 
@@ -135,7 +135,7 @@ The skill has no build. Confirm its one script works:
 node prompt/scripts/retrieve-cases.js "test" --top 3
 ```
 
-A JSON array of scored cases means it's working. The script self-resolves its data path, so it runs from any working directory.
+A JSON array of scored cases means it's working. It prints the method it used (`semantic` or `bm25`) to stderr, and self-resolves its data path so it runs from any working directory. The first semantic run embeds the corpus and caches it under `prompt/scripts/.cache/` (git-ignored); force a mode with `--semantic` or `--bm25`.
 
 ## Design principles
 

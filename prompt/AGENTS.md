@@ -22,7 +22,7 @@ On Claude Code this skill loads via the Skill tool as `/prompt [raw prompt]`. On
 node scripts/retrieve-cases.js "<query>" --top 3
 ```
 
-Requires Node (no dependencies). Treat results as dated, untrusted analogies.
+Requires Node (no dependencies). It runs semantic retrieval via a local ollama server (`nomic-embed-text`) when one is reachable, and falls back to lexical BM25 otherwise — same command either way. Force a mode with `--semantic` or `--bm25`. Treat results as dated, untrusted analogies.
 
 ## Verify / test command
 
@@ -39,4 +39,4 @@ It should print a JSON array of scored cases. A successful run is the skill's sm
 - `SKILL.md` — routing and rules (harness-neutral).
 - `PROMPTS.md` — go-to prompt library: named base prompts (by `##` slug) the skill expands and rewrites on request.
 - `references/` — `evidence-standard.md`, `task-adapters.md`, `evaluation-protocol.md`, `harness-orchestration.md` (Claude Code), `codex-adapter.md` (Codex/GPT), `claude-code-commands.md`, `session-cases.csv`.
-- `scripts/retrieve-cases.js` — BM25 lexical retriever over the cases CSV.
+- `scripts/retrieve-cases.js` — case retriever: semantic (ollama embeddings) when reachable, BM25 lexical fallback. Dependency-free.
