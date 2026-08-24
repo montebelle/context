@@ -12,7 +12,7 @@ Invoke with:
 
 `/prompt [raw prompt]`
 
-**Harness portability.** This skill is harness-neutral prose. On Claude Code it loads via the Skill tool (`/prompt`); on Codex/GPT or any agent without a skill loader, it is read as a plain instruction file (see `AGENTS.md`) and the trailing text is the `[raw prompt]`. The routing, adapter, evidence, and delivery rules apply unchanged everywhere. Only the orchestration controls are harness-specific: Claude Code bindings live in `references/harness-orchestration.md`, their Codex/GPT equivalents and degradations in `references/codex-adapter.md`.
+**Harness portability.** This skill is harness-neutral prose. On Claude Code it loads via the Skill tool (`/prompt`); OpenClaw loads `SKILL.md` natively through its Plug-ins & Skills System; on Codex/GPT or any agent without a skill loader, it is read as a plain instruction file (see `AGENTS.md`) and the trailing text is the `[raw prompt]`. The routing, adapter, evidence, and delivery rules apply unchanged everywhere. Only the orchestration controls are harness-specific: Claude Code bindings live in `references/harness-orchestration.md`, Codex/GPT in `references/codex-adapter.md`, OpenClaw in `references/openclaw-adapter.md`.
 
 Optional controls:
 
@@ -32,9 +32,9 @@ Choose exactly one route before loading references or expanding the request.
 
 **Resolve the harness and model first.** Before routing, fix the *target* harness and model the improved prompt is written for.
 
-- Default to the executing agent's own harness and model — it knows what it is running as. Tells: loaded via the Skill tool, or a `CLAUDE.md` is present ⇒ Claude Code; read through `AGENTS.md`, `~/.codex`, or the `codex` CLI ⇒ Codex/GPT.
+- Default to the executing agent's own harness and model — it knows what it is running as. Tells: loaded via the Skill tool, or a `CLAUDE.md` is present ⇒ Claude Code; read through `AGENTS.md`, `~/.codex`, or the `codex` CLI ⇒ Codex/GPT; loaded as a `SKILL.md` via the Plug-ins & Skills System, or a `~/.openclaw` config / `openclaw` CLI ⇒ OpenClaw.
 - If the prompt targets a *different* runtime, take the harness from the `target:`/`model:` control or clear repo signals; ask one question only when the harness materially changes the output and cannot be safely inferred.
-- Load the matching binding and emit that harness's real controls — `references/harness-orchestration.md` (Claude Code) or `references/codex-adapter.md` (Codex/GPT). Never put one harness's commands (`/goal`, `codex exec`, …) into another harness's prompt.
+- Load the matching binding and emit that harness's real controls — `references/harness-orchestration.md` (Claude Code), `references/codex-adapter.md` (Codex/GPT), or `references/openclaw-adapter.md` (OpenClaw). Never put one harness's commands (`/goal`, `codex exec`, `sessions_spawn`, …) into another harness's prompt.
 - Unlisted harness ⇒ emit the harness-neutral concepts only, name the degradations, and ask for that runtime's control surface before adding any harness-specific command. Keep the model portable unless one is named.
 
 **Prompt library.** If the raw input names a go-to prompt by slug (a `##` heading in `PROMPTS.md`, this skill's sibling library) or clearly matches one, load that entry as the base before routing — expand the slug into its canonical body, then rewrite it grounded to the current repo, files, and harness. Never make the user re-paste a library prompt. If a named slug is not found, say so and proceed with the literal input.
