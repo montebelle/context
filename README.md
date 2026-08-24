@@ -118,10 +118,12 @@ References load only when the route needs them:
     │   ├── evaluation-protocol.md       Held-out, model-pinned evaluation for reusable prompts.
     │   ├── harness-orchestration.md     Claude Code autonomous-run controls.
     │   ├── codex-adapter.md             Codex/GPT orchestration equivalents + degradations.
+    │   ├── openclaw-adapter.md          OpenClaw orchestration equivalents + degradations.
+    │   ├── long-horizon-autonomy.md     Surviving compaction over long runs: durable state, self-verify, self-heal.
     │   ├── claude-code-commands.md      Claude Code command/flag/setting catalog.
     │   └── session-cases.csv            Case corpus for the retriever.
     └── scripts/
-        └── retrieve-cases.js            BM25 lexical retriever over session-cases.csv.
+        └── retrieve-cases.js            Case retriever: semantic (ollama) with BM25 fallback.
 ```
 
 ## Extending
