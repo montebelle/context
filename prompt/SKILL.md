@@ -30,6 +30,13 @@ Default to `mode: rewrite`, `depth: standard`, `delivery: auto`, infer the targe
 
 Choose exactly one route before loading references or expanding the request.
 
+**Resolve the harness and model first.** Before routing, fix the *target* harness and model the improved prompt is written for.
+
+- Default to the executing agent's own harness and model — it knows what it is running as. Tells: loaded via the Skill tool, or a `CLAUDE.md` is present ⇒ Claude Code; read through `AGENTS.md`, `~/.codex`, or the `codex` CLI ⇒ Codex/GPT.
+- If the prompt targets a *different* runtime, take the harness from the `target:`/`model:` control or clear repo signals; ask one question only when the harness materially changes the output and cannot be safely inferred.
+- Load the matching binding and emit that harness's real controls — `references/harness-orchestration.md` (Claude Code) or `references/codex-adapter.md` (Codex/GPT). Never put one harness's commands (`/goal`, `codex exec`, …) into another harness's prompt.
+- Unlisted harness ⇒ emit the harness-neutral concepts only, name the degradations, and ask for that runtime's control surface before adding any harness-specific command. Keep the model portable unless one is named.
+
 **Prompt library.** If the raw input names a go-to prompt by slug (a `##` heading in `PROMPTS.md`, this skill's sibling library) or clearly matches one, load that entry as the base before routing — expand the slug into its canonical body, then rewrite it grounded to the current repo, files, and harness. Never make the user re-paste a library prompt. If a named slug is not found, say so and proceed with the literal input.
 
 ### 1. Literal or grounded follow-up
