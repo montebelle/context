@@ -56,6 +56,10 @@ Even an autonomous prompt should be as simple as the task allows — add orchest
 
 `/goal` + auto mode = the canonical unattended end-to-end run. `ultracode`/workflow + a fresh critic subagent = fan out and self-verify before finishing. A standing `/goal` whose condition spans every phase = the run won't return until fixes + docs + reorg + test-parity all hold. One `.claude/agents/<role>.md` reused as subagent, workflow stage, and teammate = define a role once.
 
+## Long-horizon runs (Claude Code binding)
+
+For a run long enough that the window will compact, clear, or restart at least once (the neutral model is `references/long-horizon-autonomy.md`), bind it here: one standing `/goal` whose condition spans the whole mission, so it survives compaction and returns only when everything holds; a progress file (e.g. `progress.md`) the run rewrites each cycle as durable state and re-reads after any `/compact` or auto-compact; an explicit instruction to **re-ground** (goal + progress + repo state) after compaction before acting, never continuing from the summary alone; each verification isolated in a fresh sub-agent (clean context) so a polluted window can't self-approve; checkpoint per phase with "save progress; don't stop on token budget." Auto-compact is on by default — assume it fires mid-run; `/autocompact` tunes the threshold. Add "do not delete tests or weaken checks to satisfy the goal" so the completion gate isn't gamed.
+
 ## Version & recency caveats (verify against the installed build)
 
 - Renames: `Task` tool → **`Agent`**; workflow keyword `workflow` → **`ultracode`** (v2.1.160); `/ultrareview` → **`/code-review ultra`**, `/review` → **`/code-review`**; `/ultraplan` removed; `TeamCreate`/`TeamDelete` removed (teammates spawn via the Agent tool).

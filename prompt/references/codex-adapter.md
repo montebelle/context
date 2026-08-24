@@ -27,6 +27,16 @@ A Codex/GPT run cannot silently inherit Claude Code assumptions. When rewriting 
 - **No subagents:** independent subtasks run sequentially or as separate operator-launched processes; there is no in-session fan-out or cross-agent verification.
 - **No billed cloud review:** `/code-review ultra` has no equivalent; substitute self-review plus shell-run tests/linters.
 
+## Long-horizon runs (Codex/GPT binding)
+
+Neutral model in `references/long-horizon-autonomy.md`. Bind it here, and state the degradations:
+
+- **Durable state:** a progress file is the mutable source of truth; `AGENTS.md` carries the durable, auto-re-read guidance. Codex re-reads `AGENTS.md` on each run, so the run's contract survives a restart; the progress file survives compaction.
+- **Continuity:** no cross-window goal-gate — express the persist-until-done loop in the prompt and resume with `codex resume` or a re-run. There is no Stop-hook to enforce it, so the operator bound (attempt/turn cap) matters more.
+- **Re-grounding:** same requirement as everywhere — after any restart, re-read goal + progress + repo state before acting; never continue from a summary alone.
+- **Verification:** no in-session sub-agents — run each verification as a separate clean `codex exec` invocation or a sequential clean pass, not a spawned critic.
+- **Self-heal / checkpoints:** identical; idempotent steps and progress-logged failures matter more here precisely because no goal-gate catches an early stop.
+
 ## Sources
 
 - Codex CLI approval & sandbox modes, `codex exec`: OpenAI Codex docs — https://developers.openai.com/codex/agent-approvals-security (redirects to https://learn.chatgpt.com/docs/agent-approvals-security).
