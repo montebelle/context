@@ -50,6 +50,10 @@ Include purpose, authority, provenance/freshness, update/deletion rules, and poi
 
 Include observable goal state, explicit current state, authorized actions, approval gates, tools, recovery, stopping, and proof. Break giant turns into staged transitions with deterministic collection/transform where possible. Harness: permissions, retries, checkpoints, idempotency, observability. For Claude Code autonomous-run orchestration (loop/goal/workflow/subagents/modes), see `references/harness-orchestration.md`.
 
+## RPI delivery
+
+For non-trivial multi-file features, bugs, or refactors where acting on an unproven premise is the main failure risk. Drive the prompt through gated phases — spec, research, plan, implement, review — that prove current state (`already true`/`not true`/`unknown` with `file:line` evidence) before writing code, stop and replan on a broken premise, and route review findings back to the originating phase. A specialization of Agentic workflow; see `references/rpi-adapter.md`.
+
 ## External or destructive action
 
 Include exact target, side effect, approval requirement, and stop-before-action boundary. Harness: least privilege, confirmation gate, secret isolation, recoverable operation, audit log.
