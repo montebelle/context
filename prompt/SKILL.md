@@ -1,7 +1,6 @@
 ---
 name: "prompt"
 description: "Improve prompts with concise routing, safe discovery, task adapters, evidence checks, autonomous end-to-end orchestration across Claude Code and Codex/GPT, and compact delivery."
-user-invocable: true
 ---
 
 # Prompt improver
