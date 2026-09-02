@@ -24,7 +24,7 @@ Category tags: **B** built-in · **S** bundled skill (the model can invoke) · *
 **Planning & review**
 - `/plan [description]` (B) — enter plan mode from the prompt.
 - `/code-review [low|medium|high|xhigh|max|ultra] [--fix] [--comment] [--post] [pr#|branch|path]` (S, `/review`) — diff/PR review; `ultra` = cloud multi-agent (formerly `/ultrareview`).
-- `/security-review` (B) — scan the branch diff for vulnerabilities.
+- `/security-review` (S) — scan the branch diff for vulnerabilities (model-invocable; the assistant runs it inside a run).
 - `/simplify [target]` (S, v2.1.154+) — cleanup review (4 parallel agents) + apply; no bug-hunting.
 - `/verify` · `/run` · `/run-skill-generator` (S, v2.1.145+) — build/run/observe the app to confirm a change works.
 - `/diff` (B) — interactive diff viewer.

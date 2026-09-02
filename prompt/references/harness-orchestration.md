@@ -60,6 +60,20 @@ Even an autonomous prompt should be as simple as the task allows — add orchest
 
 For a run long enough that the window will compact, clear, or restart at least once (the neutral model is `references/long-horizon-autonomy.md`), bind it here: one standing `/goal` whose condition spans the whole mission, so it survives compaction and returns only when everything holds; a progress file (e.g. `progress.md`) the run rewrites each cycle as durable state and re-reads after any `/compact` or auto-compact; an explicit instruction to **re-ground** (goal + progress + repo state) after compaction before acting, never continuing from the summary alone; each verification isolated in a fresh sub-agent (clean context) so a polluted window can't self-approve; checkpoint per phase with "save progress; don't stop on token budget." Auto-compact is on by default — assume it fires mid-run; `/autocompact` tunes the threshold. Add "do not delete tests or weaken checks to satisfy the goal" so the completion gate isn't gamed.
 
+## Continuity, resilience, and gates (map these too)
+
+The primitives above make a run autonomous; these keep it alive across days and stop the residual stalls. Emit them by default for any long or unattended run — they cost nothing and each closes a real failure.
+
+- **Cross-session continuity.** A terminal dies, a laptop sleeps, a session is closed. Resume, don't relaunch: `/resume [session]` (`/continue`) in-session; from a fresh terminal `claude -c` (continue last) or `claude -r "<session>"`. The standing `/goal` and hooks persist with the session. After resuming, `/recap` then re-ground (goal + progress file + repo state) before acting.
+- **Never stall on permissions.** Auto mode's classifier still blocks escalations. Before launch run `/fewer-permission-prompts` once (builds an allowlist from your transcripts) or set `/permissions` allow rules (e.g. `Bash(git diff *)`, note the space before `*`). This removes the residual pauses auto mode leaves.
+- **Model-outage self-heal.** Launch with `--fallback-model sonnet,haiku` so a provider outage mid-run degrades to a fallback instead of halting a multi-day mission.
+- **Bounded completion, enforced.** `--max-turns N` and `--max-budget-usd <n>` are the CLI bounds that make "stop after N rounds" enforced rather than prose; pair them with the `/goal` condition's own bound so the run terminates even if the goal evaluator never fires.
+- **Detached running.** `/background [prompt]` (`/bg`) detaches the mission to a background session so it keeps running; `/tasks` (`/bashes`) to watch, `/stop` to kill.
+- **Gates the assistant runs itself** (all model-invocable, weave inline): `/code-review [level] --fix` and `/security-review` on the diff; `/verify` / `/run` to build, run, and observe that the change actually works — this is the rendered/end-to-end evidence layer, use it whenever the deliverable is runnable; `/simplify` as a final cleanup pass when the diff is large. Match gate to deliverable; don't stack all of them on a one-file change.
+- **Recovery.** `/rewind` (`/checkpoint`, `/undo`) is the native "return to a known-good point" — the AgentRewind pattern from `long-horizon-autonomy.md`. It is human-triggered; the run's own recovery is bounded retry + git. Name `/rewind` under `Harness controls` as the operator's lever.
+- **Durable memory.** `/memory` and auto-memory (`autoMemoryEnabled`) hold facts that should outlive the mission; keep volatile run state in the progress file and durable facts in memory — never volatile state as durable truth.
+- **Hooks.** `/goal` needs hooks enabled; `/hooks` (or `.claude/settings.json` `hooks`) also installs the deterministic Stop-hook gate (exit 2 blocks the turn from ending). Say "hooks enabled" under `Harness controls`.
+
 ## Version & recency caveats (verify against the installed build)
 
 - Renames: `Task` tool → **`Agent`**; workflow keyword `workflow` → **`ultracode`** (v2.1.160); `/ultrareview` → **`/code-review ultra`**, `/review` → **`/code-review`**; `/ultraplan` removed; `TeamCreate`/`TeamDelete` removed (teammates spawn via the Agent tool).
