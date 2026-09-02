@@ -60,7 +60,7 @@ For prompts that will run non-interactively or in scripts:
 - Invoke: `claude` · `claude "q"` · `claude -p "q"` (print then exit) · `cat f | claude -p "q"` · `claude -c` (continue) · `claude -r "<session>" "q"` (resume).
 - Scope tools/permissions: `--allowedTools "Edit,Bash(git commit *)"`, `--disallowedTools`, `--permission-mode <plan|auto|acceptEdits|…>`, `--dangerously-skip-permissions` (unattended only, understood risk).
 - Output: `--output-format text|json|stream-json` (+`--verbose` for streamed tokens), `--json-schema '<schema>'` → `structured_output`.
-- Model/effort: `--model`, `--fallback-model sonnet,haiku`, `--effort <level>`, `--max-turns N`, `--max-budget-usd`.
+- Model/effort: `--model`, `--fallback-model sonnet,haiku`, `--effort <low|medium|high|xhigh|max>` (the flag does not take `ultracode` — that is the keyword / `/effort` form), `--max-budget-usd` (no `--max-turns` on 2.1.221 — verify on your build).
 - Prompt/agents: `--append-system-prompt[-file]`, `--system-prompt[-file]` (replace), `--agents '<json>'`, `--agent <name>`.
 - Session: `--continue/-c`, `--resume/-r`, `--fork-session`, `--from-pr`, `--no-session-persistence`, `--session-id <uuid>`.
 - Context: `--add-dir`, `--settings <file|json>`, `--setting-sources user,project`, `--bare` (skip auto-discovery; recommended for CI/SDK).
