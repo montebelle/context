@@ -58,6 +58,7 @@ Optional controls (all inferred when unstated):
 | `operation` | `explain` · `rewrite` · `diagnose` · `fix` · `execute` · `review` |
 | `constraints` | hard requirements to preserve |
 | `delivery` | `auto` (default) · `inline` · `file` |
+| `orchestrate` | `auto` (default: on for any imperative task) · `on` · `off` — force or suppress the autonomous-run rewrite + Launch block |
 
 Examples:
 
