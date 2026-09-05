@@ -99,6 +99,7 @@ References load only when the route needs them:
 | [`references/openclaw-adapter.md`](prompt/references/openclaw-adapter.md) | the executing/target harness is OpenClaw |
 | [`references/long-horizon-autonomy.md`](prompt/references/long-horizon-autonomy.md) | the run spans long horizons / must survive compaction, clearing, or restart |
 | [`references/context-graph-loop.md`](prompt/references/context-graph-loop.md) | the mission is code work — per-task execution loop + loop breakers |
+| [`references/rpi-adapter.md`](prompt/references/rpi-adapter.md) | primary adapter is RPI delivery — multi-file work where an unproven premise is the main risk |
 | [`references/claude-code-commands.md`](prompt/references/claude-code-commands.md) | a specific Claude Code command/flag must be named exactly |
 | [`references/evaluation-protocol.md`](prompt/references/evaluation-protocol.md) | reusable/production prompts, or `mode: variants` |
 
@@ -123,6 +124,7 @@ References load only when the route needs them:
     │   ├── openclaw-adapter.md          OpenClaw orchestration equivalents + degradations.
     │   ├── long-horizon-autonomy.md     Surviving compaction over long runs: durable state, self-verify, self-heal.
     │   ├── context-graph-loop.md        Per-task execution loop + numeric loop breakers for code work.
+    │   ├── rpi-adapter.md               RPI delivery: gated spec→research→plan→implement→review on current-state proof.
     │   ├── claude-code-commands.md      Claude Code command/flag/setting catalog.
     │   └── session-cases.csv            Case corpus for the retriever.
     └── scripts/
