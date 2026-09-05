@@ -28,6 +28,8 @@ Design steps to be idempotent and checkpointed so an interrupted run resumes wit
 
 Checkpoint on a fixed cadence (per phase, or per N actions), continue across context and budget boundaries ("save progress and continue; do not stop on token budget"), and bound the mission with a completion condition the run visibly demonstrates plus a hard stop — without the bound it never returns. Treat externalizing working memory / checkpoints as an explicit agent step, not an afterthought [CORAL; Externalization review].
 
+Tactical companion: `context-graph-loop.md` supplies the per-task execution loop and concrete loop breakers (action budget, repetition limit, context-percentage and compaction-count escalation) that make sections 3–6 operational inside a single task.
+
 ## Emitting the "long-run survival" block
 
 When SKILL.md step 10 flags a long-horizon or unattended run, the emitted prompt must carry a compact block instructing: (a) write and maintain a durable progress file; (b) re-ground from goal + progress + state after any compaction; (c) self-verify each phase against an objective check; (d) self-heal with bounded retry, then escalate; (e) idempotent, resumable checkpoints; (f) a bounded completion condition. Bind these to the harness via the two references above. On a harness without a goal-gate or sub-agents, state the degradation — do not assume the primitive exists.
