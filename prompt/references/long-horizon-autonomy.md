@@ -26,7 +26,7 @@ Design steps to be idempotent and checkpointed so an interrupted run resumes wit
 
 ## 6. Pacing & termination
 
-Checkpoint on a fixed cadence (per phase, or per N actions), continue across context and budget boundaries ("save progress and continue; do not stop on token budget"), and bound the mission with a completion condition the run visibly demonstrates plus a hard stop — without the bound it never returns. Treat externalizing working memory / checkpoints as an explicit agent step, not an afterthought [CORAL; Externalization review].
+Checkpoint on a fixed cadence (per phase, or per N actions), continue across context and budget boundaries ("save progress and continue; do not stop on token budget"), and bound the mission with a completion condition the run visibly demonstrates plus a hard stop — without the bound it never returns. Treat externalizing working memory / checkpoints as an explicit agent step, not an afterthought [CORAL; Externalization review]. Make the run auditable, not just resumable: emit an inspectable per-phase trace (what ran, the evidence, the checkpoint) so an operator can replay how a multi-hour run reached its state; where the harness supports OpenTelemetry GenAI spans, instrument tool and model calls, otherwise the progress file IS the trace [OTel GenAI conventions].
 
 Tactical companion: `context-graph-loop.md` supplies the per-task execution loop and concrete loop breakers (action budget, repetition limit, context-percentage and compaction-count escalation) that make sections 3–6 operational inside a single task.
 
@@ -44,3 +44,4 @@ When SKILL.md step 10 flags a long-horizon or unattended run, the emitted prompt
 - *AgentRewind: Recoverable Execution for Long-Horizon LLM Agents* — arXiv 2608.14380.
 - *CORAL: Cognitive Resource Self-Allocation* ("Don't Lose the Thread") — OpenReview NBGlItueYE.
 - *Externalization in LLM Agents: A Unified Review* — arXiv 2604.08224.
+- OpenTelemetry GenAI semantic conventions — portable trace/span attributes for agent runs. https://opentelemetry.io/docs/specs/semconv/gen-ai/
