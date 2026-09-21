@@ -45,7 +45,7 @@ A completed image job id is directly usable as a media value in later estimate a
 * seedance_2_5 omni_reference, 720p: 6s = 42, 5s = 35. Published 10s tiers 30/65/90 at 480/720/1080.
 * seedance_2_5 video_edit: billed by the SOURCE video duration, ignoring duration and aspect parameters. 6.04s source = 18.12, 10.5s = 31.5, one 6s source priced 22 at 480p and 46 at 720p on a later catalog.
 * Stills: Seedream 5 Pro 1k = 1.5 (generation or inpaint edit); Seedream 4.5 basic = 1; GPT Image 2k high = 3, 2k medium = 1.5, 1k medium = 1; nano banana 2k edit = 2.
-* Cost is independent of reference count. Approve at 480p, spend on 720p only when a named fine detail cannot be judged at 480p, master by local upscale.
+* Cost is independent of reference count. Approve at 480p, and spend on 720p only when the payload names a specific fine detail that 480p cannot show; master by local upscale. Under autonomous operation this is a machine rule: default to 480p, and allow the 720p tier only when the scene request names that fine detail, never by reflex. The approve half is creative acceptance and rides the per scene second model pass plus the human final cut, not a per scene human yes.
 * Plan facts: the Seedance family is subscription gated (basic or higher) regardless of credit balance; the free plan allows one concurrent job; after upgrade the mode list can collapse to what the account supports.
 
 ## video_edit surface limits
@@ -68,8 +68,8 @@ A completed image job id is directly usable as a media value in later estimate a
 ## Payload and approval discipline
 
 * Save every prompt and media role set as a payload file before submission; assert on it (jq or a checksum) so the submitted bytes match the approved bytes, and so a retry provably changes one variable.
-* The spend loop: preflight the exact payload, report exact credits plus current and projected balance, wait for an explicit yes, submit the identical payload once, poll, confirm the charge by balance difference, then audit before anything depends on the result.
-* Download results by curl from the result URL into the repo; keep rejected takes renamed but never deleted; log every state change in a job doc. Finished corporate masters stay local unless an upload is explicitly approved.
+* The spend loop: preflight the exact payload, report exact credits plus current and projected balance. Under a human, wait for an explicit yes. Under autonomous operation, replace the yes with the run ceiling from the envelope: submit only when projected credits fit under the ceiling (and under remaining balance), and hard stop otherwise. Then submit the identical payload once, poll, confirm the charge by balance difference, and audit before anything depends on the result. Setting the ceiling is the one thing that stays human; it is authorized once in the envelope, never per job.
+* Download results by curl from the result URL into the repo; keep rejected takes renamed but never deleted; log every state change in a job doc. Finished corporate masters stay local unless an upload is explicitly approved. Under autonomous operation the loop is given no upload, publish, or media export tool at all, so egress is impossible to perform and the master sits in the repo. This stays a human gate: a human reopens the export capability out of band only when they actually intend to publish. Default deny loses nothing but the ability to leak.
 
 ## Sandbox and higgsedit assembly surface
 
