@@ -7,9 +7,9 @@ Read when orchestration resolves Focused or Broad on Claude Code (tiers and budg
 `/goal`, the permission mode, and the `ultracode` keyword are human only switches: `/goal` is a built in the model cannot run, the mode changes only with Shift+Tab or a launch flag, and `ultracode` fires only from human typed input. The skill runs inside a live session (desktop app or running CLI) where auto mode is already on, so the default Launch is in session:
 
 - **Broad**: ONE message, the mission pasted once, beginning with the word `ultracode`, with its `Done =` completion condition written inside it. The keyword launches a dynamic workflow that runs the mission to completion in the background and returns only the final answer; the workflow is the loop, so nothing is sent separately.
-- **Focused**, and the Broad fallback when workflows are unavailable (disabled in settings, a plan without the opt in, or the keyword did not launch one): `/goal <condition>` as its own message, then the mission. A `/goal` cannot share a message with the mission.
+- **Focused**, and the Broad fallback when workflows are unavailable (disabled in settings, a plan without the opt in, or the keyword did not launch one): `/goal <condition>` as its own message, then the mission. A `/goal` cannot share a message with the mission. Write the fallback out in full: the real `Done =` text with its round cap, ready to send, never a placeholder.
 - Optional one time hardening: `/permissions` deny `Bash(git push *)` (prose is intent; the deny rule is enforcement). Send `/effort <level>` only when the user wants a non default level.
-- **New shell session, headless, or CI only**: `claude --permission-mode auto --effort high --fallback-model sonnet,haiku --max-budget-usd <n> --allowedTools "<tools this mission needs, e.g. Edit,Write,Bash(git *),Bash(make *)>" --disallowedTools "<the irreversible edge, e.g. Bash(git push *),Bash(gh pr *)>" "/goal <whole mission condition; save progress to <file>; don't delete or weaken tests; stop after N rounds>"`, then the mission paste. Use `--effort max` only when the user asks. `ultracode` is inert under `-p` (non human origin) and the mode is not set from chat, so state the headless switch under `Harness controls`.
+- **New shell session, headless, or CI only**: `claude --permission-mode auto --effort high --fallback-model sonnet,haiku --max-budget-usd <n> --allowedTools "<tools this mission needs, only commands verified in the repo, e.g. Edit,Write,Bash(git *)>" --disallowedTools "<the irreversible edge, e.g. Bash(git push *),Bash(gh pr *)>" "/goal <whole mission condition; save progress to <file>; don't stop on token budget; don't delete or weaken tests; stop after N rounds>"`, then the mission paste. Use `--effort max` only when the user asks. `ultracode` is inert under `-p` (non human origin) and the mode is not set from chat, so state the headless switch under `Harness controls`.
 - Never emit `--max-turns` or `--effort ultracode`: neither is a CLI flag (the effort flag takes low, medium, high, xhigh, max). Bound with `--max-budget-usd` plus the goal condition's round cap.
 - Put the irreversible edge in `--disallowedTools` (or `permissions.deny`) as well: a `Bash(git *)` allow rule otherwise permits the push the prose forbids.
 - A `/goal` buried mid prompt is inert text (slash commands fire only at the start of a message), and a run with no real goal gate stops at its first turn boundary and asks "keep going?".
@@ -20,7 +20,7 @@ Read when orchestration resolves Focused or Broad on Claude Code (tiers and budg
 
 Match the command to the job: `/goal`, not `/loop`, for "until it passes" (`/loop` is interval polling); `ultracode` or a workflow for fan out; in conversation subagents for parallel reads. Weave these inline; the assistant runs them itself:
 
-- `/code-review [level] --fix` on the diff, once at the end of a Focused or Broad run.
+- `/code-review [level]` on the diff, once at the end of a Focused or Broad run that produced one; add `--fix` only when the mission authorizes edits.
 - `/verify` or `/run` to build, run, and observe the change working whenever the deliverable is runnable (the rendered or end to end evidence layer).
 - `/security-review` only when the change is security relevant (auth, secrets, input handling, external calls, permissions).
 - `/simplify` (four parallel agents) only as a final cleanup when the diff is large.
@@ -44,7 +44,7 @@ The neutral model is `references/long-horizon-autonomy.md`. On Claude Code: one 
 
 ## Harness controls to name (out of prompt)
 
-- Permissions: pass the mission allowlist on the launch line (`--allowedTools "Edit,Write,Bash(git *),Bash(make *)"`, space before `*`); `/fewer-permission-prompts` can build it from past transcripts and `/permissions` persists it.
+- Permissions: pass the mission allowlist on the launch line (`--allowedTools "Edit,Write,Bash(git *)"` plus only commands verified in the repo, space before `*`); `/fewer-permission-prompts` can build it from past transcripts and `/permissions` persists it.
 - Outage self heal: `--fallback-model sonnet,haiku`.
 - Isolation: `claude --worktree`, or subagent `isolation: worktree`, when parallel agents mutate files.
 - Detached running: `/background [prompt]` (`/bg`); `/tasks` to watch, `/stop` to kill.

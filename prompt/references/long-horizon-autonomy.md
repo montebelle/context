@@ -1,20 +1,6 @@
 # Long horizon autonomy
 
-Read for a Broad orchestrated mission (`SKILL.md`, Orchestration sizing): a run that may last hours to weeks, long enough that its context will be summarized, cleared, or restarted at least once. Harness neutral; the bindings live in `harness-orchestration.md` (Claude Code), `codex-adapter.md` (Codex/GPT), and `openclaw-adapter.md` (OpenClaw). A Focused mission carries only the one resume line from `SKILL.md`.
-
-## The long run survival block (emit this)
-
-The emitted prompt carries one compact block, in its static part, instructing the run to:
-
-- (a) keep one durable progress file as the source of truth;
-- (b) after any compaction, clear, or restart, reground from the goal, the progress file, and current state before acting, and continue from the first unchecked item;
-- (c) prove each phase against an objective check, verified in a fresh context;
-- (d) on failure, self heal with bounded retry, log the cause, then escalate; never delete or weaken a check to pass;
-- (e) keep steps idempotent with resumable checkpoints;
-- (f) end on a bounded completion condition the run visibly demonstrates, with a round cap;
-- (g) run each phase or slice in a fresh agent that starts from the progress file plus a 1k to 2k token handoff, write bulky output to files, and hand off at about 150k tokens of context rather than carrying one agent through the run.
-
-Bind each item to the harness. On a harness without a goal gate or subagents, state the degradation; do not assume the primitive exists.
+Rationale and sources for the survival block, which lives in `SKILL.md` (Orchestrated prompts) and is emitted for every Focused or Broad mission; it is not needed to emit the block. Read it when a run must last hours to weeks or the target harness has no binding. Harness neutral; the bindings live in `harness-orchestration.md` (Claude Code), `codex-adapter.md` (Codex/GPT), and `openclaw-adapter.md` (OpenClaw). Bind each item to the harness; on a harness without a goal gate or subagents, state the degradation.
 
 ## Why each item is there
 

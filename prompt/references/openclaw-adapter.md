@@ -22,7 +22,7 @@ Caveat: OpenClaw moves fast (three renames in ~3 months) — verify flags and co
 
 ## Long-horizon runs (OpenClaw binding)
 
-Neutral model in `long-horizon-autonomy.md`. OpenClaw supplies more of it natively than most harnesses:
+Neutral model: the survival block in `SKILL.md` (rationale in `long-horizon-autonomy.md`). OpenClaw supplies more of it natively than most harnesses:
 
 - **Compaction is built in and cooperative** — the transcript is an append-only tree; older turns are summarized when the window fills, and **before compacting OpenClaw automatically reminds the agent to save important notes to memory files**. The emitted prompt should lean on that: write durable progress to a memory file so it survives compaction, and re-ground from memory + the task board after any compaction.
 - **Durable state** — the Memory & Knowledge System (memory files + RAG) is the source of truth, not the transcript.

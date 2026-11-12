@@ -30,7 +30,7 @@ A Codex/GPT run cannot silently inherit Claude Code assumptions. When rewriting 
 
 ## Long-horizon runs (Codex/GPT binding)
 
-Neutral model in `references/long-horizon-autonomy.md`. Bind it here, and state the degradations:
+Neutral model: the survival block in `SKILL.md` (rationale in `references/long-horizon-autonomy.md`). Bind it here, and state the degradations:
 
 - **Durable state:** a progress file is the mutable source of truth; `AGENTS.md` carries the durable, auto-re-read guidance. Codex re-reads `AGENTS.md` on each run, so the run's contract survives a restart; the progress file survives compaction.
 - **Continuity:** no cross-window goal-gate — express the persist-until-done loop in the prompt and resume with `codex resume` or a re-run. There is no Stop-hook to enforce it, so the operator bound (attempt/turn cap) matters more.

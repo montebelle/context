@@ -4,7 +4,7 @@ Read when an orchestrated mission (Focused or Broad) is code work: implementatio
 
 ## Emit this
 
-Name the loop once and fold it into each phase; do not restate it per phase. Place it in the prompt's static block, next to the survival block or resume line.
+Name the loop once and fold it into each phase; do not restate it per phase. Place it in the prompt's static block, next to the survival block. In a read only mission (review, audit, verify), execute means record the finding and its proposed fix, not patch.
 
 **Loop:** scope (one objective, success criteria, owned files, constraints) → retrieve (semantic search only when the identifier is unknown, otherwise exact search) → impact (inspect callers, callees, and affected flows before editing a symbol) → execute (the smallest coherent patch; do not graph wrap mechanical actions) → verify (focused tests and static checks with real output) → detect (audit affected symbols and flows once the patch is stable) → checkpoint (decisions, owned files, verification, risks, and the exact next action).
 
