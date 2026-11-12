@@ -51,18 +51,7 @@ Create a portable core containing outcome, authoritative context, hard constrain
 
 ## Evaluation
 
-For important reusable prompts:
-
-1. Freeze exact model/version, settings, system context, tools, retrieval corpus, output budget and harness.
-2. Predeclare success metrics and hard safety gates.
-3. Use representative normal, edge, adversarial, long-session and missing-information cases.
-4. Change one prompt/context component at a time.
-5. Run repeated trials where nondeterminism matters.
-6. Preserve complete inputs, context manifests, outputs, traces, tokens, latency and cost.
-7. Use deterministic validators first; blind human or calibrated model graders to variant identity.
-8. Report distributions and failure modes, not only averages.
-9. Test exact models separately.
-10. Select the smallest, cheapest variant that clears all quality and safety thresholds, then confirm on held-out cases.
+For important reusable prompts, follow `evaluation-protocol.md`; do not restate it here.
 
 ## Evidence limits
 

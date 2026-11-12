@@ -1,91 +1,80 @@
 # Harness orchestration (Claude Code)
 
-Load when the request involves running autonomously, iterate-until-done, fan-out or parallelism, scale beyond one context window, verification or quality gates, or names a Claude Code control (`/loop`, `/goal`, `ultracode`, workflow, subagents, auto mode). For exact syntax and the full command list, see `references/claude-code-commands.md`.
+Read when orchestration resolves Focused or Broad on Claude Code (tiers and budget rules: `SKILL.md`, Orchestration sizing), or when the request names a Claude Code control (`/loop`, `/goal`, `ultracode`, workflow, subagents, plan or auto mode). Read `references/claude-code-commands.md` only when a command, flag, or setting not named here must be named exactly. Syntax moves fast across the v2.1.x line; the version notes are at the end.
 
-Caveat: syntax changes fast across the v2.1.x line (keyword, tool, and command names have all been renamed) — use the current names but expect the user to verify against their build (`claude --version`); caveats are at the end. Real security (least privilege, sandboxing, secret isolation) lives in the harness, not in prompt words.
+## Launch (human sent)
 
-## Write it to run autonomously, end to end
+`/goal`, the permission mode, and the `ultracode` keyword are human only switches: `/goal` is a built in the model cannot run, the mode changes only with Shift+Tab or a launch flag, and `ultracode` fires only from human typed input. The skill runs inside a live session (desktop app or running CLI) where auto mode is already on, so the default Launch is in session:
 
-The default for an orchestration prompt is a self-driving mission: it runs start to finish without stopping to ask, and the **completion condition — not a human checkpoint — is what ends it**. The commands go inline as the engine, not as steps a human executes:
+- **Broad**: ONE message, the mission pasted once, beginning with the word `ultracode`, with its `Done =` completion condition written inside it. The keyword launches a dynamic workflow that runs the mission to completion in the background and returns only the final answer; the workflow is the loop, so nothing is sent separately.
+- **Focused**, and the Broad fallback when workflows are unavailable (disabled in settings, a plan without the opt in, or the keyword did not launch one): `/goal <condition>` as its own message, then the mission. A `/goal` cannot share a message with the mission.
+- Optional one time hardening: `/permissions` deny `Bash(git push *)` (prose is intent; the deny rule is enforcement). Send `/effort <level>` only when the user wants a non default level.
+- **New shell session, headless, or CI only**: `claude --permission-mode auto --effort high --fallback-model sonnet,haiku --max-budget-usd <n> --allowedTools "<tools this mission needs, e.g. Edit,Write,Bash(git *),Bash(make *)>" --disallowedTools "<the irreversible edge, e.g. Bash(git push *),Bash(gh pr *)>" "/goal <whole mission condition; save progress to <file>; don't delete or weaken tests; stop after N rounds>"`, then the mission paste. Use `--effort max` only when the user asks. `ultracode` is inert under `-p` (non human origin) and the mode is not set from chat, so state the headless switch under `Harness controls`.
+- Never emit `--max-turns` or `--effort ultracode`: neither is a CLI flag (the effort flag takes low, medium, high, xhigh, max). Bound with `--max-budget-usd` plus the goal condition's round cap.
+- Put the irreversible edge in `--disallowedTools` (or `permissions.deny`) as well: a `Bash(git *)` allow rule otherwise permits the push the prose forbids.
+- A `/goal` buried mid prompt is inert text (slash commands fire only at the start of a message), and a run with no real goal gate stops at its first turn boundary and asks "keep going?".
+- Crash recovery is one command, `claude -c` (or `/resume`); the standing `/goal` and hooks persist with the session, and the prompt already says to reread the progress file and continue from the first unchecked item. After resuming, `/recap`, then reground.
+- Zero ritual option: write `.claude/settings.json` in the target repo once (`permissionMode`, `effort`, `fallbackModel`, `permissions.allow`, plus a `Stop` hook that exits 2 until the progress file carries the completion marker); then the mission paste alone is the launch. Verify the hook and settings keys on the user's build; a script Stop hook is overridden after 8 blocks, so keep the `/goal` form for multi day runs.
 
-- **`ultracode`** (or "use a workflow") up front to fan the work out and run at full effort.
-- **One standing `/goal`** whose condition is the *entire* mission's done-state (every phase, plus the final acceptance check), so the run persists across turns and context windows and only returns control when everything holds. Make the condition transcript-verifiable (tests pass, files exist, `git status` clean), and add long-horizon autonomy to it: keep working across context windows, save progress to a file, never stop early on token budget.
-- **Auto mode** so it never pauses for permission inside its scope.
+## Inside the mission (model invocable)
 
-Do **not** insert plan mode, "PAUSE for approval," "your call," billing asides, or operator notes inside the mission — those break the autonomous run. But know what the model can and cannot do: `/code-review`, `/security-review`, and subagent fan-out are model-invocable and belong inline; **`/goal`, permission mode, and the `ultracode` keyword are human-only switches** — `/goal` is a built-in the model cannot run, mode changes only via Shift+Tab or a launch flag, and `ultracode` fires only from human-typed input. So the launch, inside an interactive session (desktop app or running CLI — the default, since that is where the skill is invoked; auto mode is already on), is ONE message: the mission pasted once, beginning with `ultracode`, with its completion condition written inside it. That keyword launches a dynamic workflow that runs the mission to completion in the background and returns only the final answer — the workflow is the loop, so no `/goal` is needed and nothing is sent separately. Use the `/goal` two-message form only as the fallback (a conversational single-agent run, or workflows unavailable: disabled in settings, no plan opt-in, keyword did not fire): `/goal <condition>` as its own message, then the mission. Only for a new shell session or headless/CI is it the launch line `claude --permission-mode auto --effort max --fallback-model sonnet,haiku --max-budget-usd <n> --allowedTools "<tools>" --disallowedTools "<irreversible edge>" "/goal <condition>"` then the mission paste (`ultracode` is inert under `-p`). Either way it is not a ritual: survival, resume, gates, and boundaries live inside the prompt; the only other human action is reopening the session (`claude -c`) after a crash. A `/goal` buried mid-prompt is inert text — slash commands fire only at the start of a message — and a run with no real goal-gate stops at its first turn boundary and asks "keep going?".
+Match the command to the job: `/goal`, not `/loop`, for "until it passes" (`/loop` is interval polling); `ultracode` or a workflow for fan out; in conversation subagents for parallel reads. Weave these inline; the assistant runs them itself:
 
-This assumes an interactive, human-typed session, where the `ultracode` keyword and a `/goal` sent as its own message take effect. If the prompt will run headless (`claude -p` / CI / a routine), the `ultracode` keyword is inert (non-human origin) and mode isn't set from chat — pass the equivalents as launch flags instead: `--effort max` (the CLI flag takes low|medium|high|xhigh|max — `ultracode` is a keyword/`/effort` form, not a flag value), `--permission-mode auto`, and `claude -p "/goal …"`. State that switch under `Harness controls` when the run is headless.
+- `/code-review [level] --fix` on the diff, once at the end of a Focused or Broad run.
+- `/verify` or `/run` to build, run, and observe the change working whenever the deliverable is runnable (the rendered or end to end evidence layer).
+- `/security-review` only when the change is security relevant (auth, secrets, input handling, external calls, permissions).
+- `/simplify` (four parallel agents) only as a final cleanup when the diff is large.
+- A fresh critic subagent per phase only for large or risky Broad phases; otherwise one critic or `/code-review` at the end. Do not stack every gate on a small change.
+- `/code-review ultra` is cloud, billed, and user invoked; leave it out of an autonomous prompt.
+- Harsh critic loop, when the user asks for one (there is no built in self looping critic): build, then a fresh critic subagent reviews only the diff or render and tries to refute it, feed back, repeat until the critic raises no blocking issue. The goal condition ("critic reports zero blocking gaps") makes it terminate. Give the critic an objective bar and concrete evidence (blind side by side, an empty gap list), not the word "perfect". Agent teams `TaskCompleted` and `TeammateIdle` exit 2 hooks are the enforced variant.
 
-**Bound autonomy with hard boundaries, not confirmation prompts.** State the irreversible/external edge as a stop line in the prompt — branch only; no push, tag, PR, deploy; no live external calls — and enforce it on the launch line with `--disallowedTools` (or `permissions.deny` in settings): a broad allow rule like `Bash(git *)` otherwise permits the very push the prose forbids. Prose is intent; the deny rule is the boundary. Autonomy runs free inside reversible/local scope (a branch, a sandbox) and hard-stops at that edge; the human reviews the finished branch, not mid-run. Only a genuinely destructive, unavoidable external action gets gated individually — everything else runs. (A human checkpoint goes in only when the user asks for one.)
+## Workflow shape (Broad)
 
-Match the command to the section's job:
+The run authors its own workflow script; the mission tells it how to keep that cheap:
 
-- **Persist until the whole mission is done** → `ultracode` (a workflow runs the mission to completion; condition inside the mission) or, as fallback, one standing `/goal <condition covering every phase>`.
-- **Fan out / parallelize / max effort** → `ultracode` or "use a workflow"; in-conversation subagents for parallel reads.
-- **Never pause on permissions** → auto mode.
-- **Review / verify inside the run** → `/code-review`, `/security-review`, a fresh critic subagent (the assistant runs these itself).
-- **Keep context clean across phases** → `/clear` / `/compact`, plus a progress file for cross-window continuity.
+- One fresh agent per phase or independent slice; each reads the progress file plus a short handoff and returns a summary of 1k to 2k tokens, with bulky output written to files and passed by path. Prefer a pipeline over barriers unless a stage needs all prior results (dedupe, early exit on zero).
+- Every agent prompt is the shared static prefix first and that agent's item last.
+- `agent()` takes per call `model` and `effort`; omitted, both inherit the session. Emit: lead and implementers inherit; mechanical stages `effort: 'low'`; a higher effort only for the hardest verify or judge stage; a smaller model (for example `model: 'sonnet'`) for search or read only review only when confident it fits.
+- Dedupe, filtering, counting, and other mechanical steps run in plain script code, not agents. `isolation: 'worktree'` only when parallel agents mutate the same files.
+- If the user gave a turn token budget (a "+500k" style directive), the script's `budget` is a hard ceiling; size the fleet to it.
 
-Keep it accurate while embedding: `/goal`, not `/loop`, for "until it passes" (`/loop` is interval polling); `ultracode`/workflow for fan-out; subagents by default for parallel work. The `/goal` evaluator judges the transcript only — no commands, no file reads — so the condition must be something the run visibly demonstrates, and it needs a bound (`or stop after N turns`) or it never returns.
+## Long horizon binding
 
-## When to orchestrate at all
+The neutral model is `references/long-horizon-autonomy.md`. On Claude Code: one standing completion condition spans the whole mission (the workflow's `Done =`, or `/goal`) so the run survives compaction and returns only when everything holds; a progress file (for example `progress.md`) is rewritten each cycle and reread after any `/compact` or auto compact; reground (goal, progress, repo state) before acting, never from the summary alone; each verification runs in a fresh subagent so a polluted window cannot approve itself; checkpoint per phase; in a single agent run, `/clear` or `/compact` with a focus between phases. Auto compact is on by default, so assume it fires mid run (`/autocompact` tunes the threshold). Add "do not delete tests or weaken checks to satisfy the goal".
 
-Even an autonomous prompt should be as simple as the task allows — add orchestration where it earns its place, not everywhere. Multi-agent runs cost many times the tokens of one thread (~15× for Anthropic's research system; each subagent carries fixed startup overhead), and over-spawning is the named failure. So size the engine to the work: a single agent with a `/goal` loop for a focused task; subagent fan-out for genuinely independent subtasks or noisy investigation; a workflow only when the job exceeds one context window or findings must be cross-verified; agent teams (experimental) only when parallel workers must challenge each other.
+## Harness controls to name (out of prompt)
+
+- Permissions: pass the mission allowlist on the launch line (`--allowedTools "Edit,Write,Bash(git *),Bash(make *)"`, space before `*`); `/fewer-permission-prompts` can build it from past transcripts and `/permissions` persists it.
+- Outage self heal: `--fallback-model sonnet,haiku`.
+- Isolation: `claude --worktree`, or subagent `isolation: worktree`, when parallel agents mutate files.
+- Detached running: `/background [prompt]` (`/bg`); `/tasks` to watch, `/stop` to kill.
+- Recovery: `/rewind` (`/checkpoint`, `/undo`) is the operator's return to a known good point; the run's own recovery is bounded retry plus git.
+- Durable memory: `/memory` and auto memory (`autoMemoryEnabled`) hold facts that outlive the mission; volatile run state stays in the progress file.
+- Hooks enabled: `/goal` requires them; `/hooks` or `.claude/settings.json` `hooks` also installs the deterministic Stop hook gate.
 
 ## Primitive catalog
 
-**`/goal <condition>`** — the autonomous engine's stop signal. Installs a session Stop hook; after every turn a small fast model (Haiku) judges the condition from the transcript only. Write a condition the run visibly demonstrates (`make test` matches baseline, files moved, `git status` clean), fold in the whole mission's acceptance, and bound it. One goal/session; ≤4,000 chars; needs hooks enabled; pairs with auto mode for unattended running. Add "do not delete tests" or the agent may delete failing tests to satisfy it.
+- **`/goal <condition>`**: installs a session Stop hook; after every turn a small fast model (Haiku) judges the condition from the transcript only, with no commands or file reads, so the condition must be something the run visibly demonstrates (`make test` matches baseline, files moved, `git status` clean). Fold in the whole mission's acceptance and bound it (`or stop after N turns`) or it never returns. One goal per session; at most 4,000 characters; needs hooks; pairs with auto mode. Add "do not delete tests" or the agent may delete failing tests to satisfy it.
+- **Stop hook (script)**: a `Stop` hook that exits 2 blocks the turn from ending until a script passes (Claude overrides after 8 blocks).
+- **`/loop [interval] [prompt]`**: interval repetition while the session is open (poll a deploy, babysit a PR); not a completion gate.
+- **Cloud routines (`/schedule`)**: durable unattended scheduling beyond a session (at least hourly, API fire, GitHub PR or Release); the outer trigger, with a workflow, team, or subagents as the inner engine.
+- **Fan out**, by who holds the plan: in conversation subagents (the Agent tool; the default meaning of "fan out"; parallel, isolated, return summaries; custom roles in `.claude/agents/<name>.md`, invoked by name or `@agent-<name>`), then agent view (`claude agents`), then agent teams (experimental, `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`; lead plus peers on a shared task list; only when parallel workers must challenge each other), then dynamic workflows (a script spawns agents through `agent()`, `pipeline()`, `parallel()`; runs in the background and returns only the final answer; about 16 concurrent and 1,000 per run; trigger with `ultracode` or "use a workflow" from human typed input; resume reruns every agent started after the first unfinished one).
+- **ultracode, two forms**: the keyword in the prompt starts one workflow for that task; `/effort ultracode` is a standing session mode (xhigh plus a workflow per task, only on xhigh capable models). Both cost more tokens; use them for Broad runs only.
+- **Auto mode** (`--permission-mode auto`): a classifier blocks escalations while routine work proceeds unprompted; this is what lets a run go unattended.
+- **Composition**: `/goal` plus auto mode is the canonical unattended single agent run; a workflow plus a fresh critic subagent fans out and self verifies; one `.claude/agents/<role>.md` reused as subagent, workflow stage, and teammate defines a role once.
 
-**Stop hook (script)** — deterministic version: a `Stop` hook that exits code 2 blocks the turn from ending until a script passes (Claude overrides after 8 blocks).
+## Worked example (Broad)
 
-**`/loop [interval] [prompt]`** — interval repetition while the session is open (poll a deploy, babysit a PR). Not a completion gate — for "until done" use `/goal`.
+Raw: "build a AAA game, fan out subagents on each system, /loop until each is perfect, a harsh critic compares blind side-by-side vs the real game and keeps going, ultracode." Becomes one self driving mission with no plan mode, approval pause, or operator note:
 
-**Cloud routines (`/schedule`)** — durable unattended scheduling (≥1h, API fire, GitHub PR/Release) beyond a session; outer trigger, inner engine still a workflow/team/subagents.
+- Launch: the mission pasted once, beginning with `ultracode`; auto mode is already on.
+- Static block first: local branch only, nothing published; survival block; loop breakers; each subsystem built by a fresh worktree isolated agent at default effort, the critic stage at higher effort.
+- Engine: a builder agent per subsystem; a fresh critic compares each render blind against reference frames and names every gap; the builder fixes and resubmits until the critic list is empty; `/code-review` the final diff.
+- Last: `Done =` every subsystem passes its blind side by side critic with zero AAA blocking gaps, progress saved to `progress.md`, or stop after N rounds per subsystem. The raw `/loop` becomes this condition, since `/loop` only polls.
 
-**Fan-out — the axis is who holds the plan:** in-conversation **subagents** (the Agent tool; default meaning of "fan out"; parallel, isolated, return summaries; custom roles in `.claude/agents/<name>.md`, invoke by name or `@agent-<name>`) → **agent view** (`claude agents`) → **agent teams** (experimental, `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`; lead + peers, shared task list) → **dynamic workflows** (a script spawns many agents via `agent()`/`pipeline()`/`parallel()`, background, returns only the final answer; ~16 concurrent / 1,000 per run; trigger with `ultracode` or "use a workflow" from human-typed input; resume re-runs every agent started after the first unfinished one). **Worktree isolation** (`claude --worktree`, or subagent `isolation: worktree`) when parallel agents mutate files and would collide.
+## Version and recency notes (verify against `claude --version`)
 
-**Harsh-critic loop (no built-in self-looping critic exists).** Express as an orchestrated loop the run drives itself: build → a fresh critic subagent reviews only the diff/render and tries to refute it → feed back → re-run until the critic raises no blocking issue. The `/goal` condition ("critic reports zero blocking gaps") is what makes it terminate. Give the critic an objective bar and concrete evidence (blind side-by-side, an empty gap list), not the word "perfect." (Agent-teams `TaskCompleted`/`TeammateIdle` exit-2 hooks are the enforced-gate variant.)
-
-**ultracode — two forms:** the `ultracode` keyword in the prompt = one workflow for that task; `/effort ultracode` = standing session mode (xhigh + a workflow per task; model-gated to xhigh-capable models). Both cost more tokens; both are what to lead an autonomous fan-out with.
-
-**Review:** `/code-review [level] [--fix] [target]` — local; the assistant runs it inside the run. `/code-review ultra` — cloud, billed, user-invoked only; leave it out of a fully autonomous prompt.
-
-**Auto mode** (`--permission-mode auto`) — the classifier blocks escalations while routine work proceeds unprompted; the Pro/Max/Team default since 2026-08-14. This is what lets a `/goal` run go unattended.
-
-## Composition patterns
-
-`/goal` + auto mode = the canonical unattended end-to-end run. `ultracode`/workflow + a fresh critic subagent = fan out and self-verify before finishing. A standing `/goal` whose condition spans every phase = the run won't return until fixes + docs + reorg + test-parity all hold. One `.claude/agents/<role>.md` reused as subagent, workflow stage, and teammate = define a role once.
-
-## Long-horizon runs (Claude Code binding)
-
-For a run long enough that the window will compact, clear, or restart at least once (the neutral model is `references/long-horizon-autonomy.md`), bind it here: one standing `/goal` whose condition spans the whole mission, so it survives compaction and returns only when everything holds; a progress file (e.g. `progress.md`) the run rewrites each cycle as durable state and re-reads after any `/compact` or auto-compact; an explicit instruction to **re-ground** (goal + progress + repo state) after compaction before acting, never continuing from the summary alone; each verification isolated in a fresh sub-agent (clean context) so a polluted window can't self-approve; checkpoint per phase with "save progress; don't stop on token budget." Auto-compact is on by default — assume it fires mid-run; `/autocompact` tunes the threshold. Add "do not delete tests or weaken checks to satisfy the goal" so the completion gate isn't gamed.
-
-## Continuity, resilience, and gates (map these too)
-
-The primitives above make a run autonomous; these keep it alive across days and stop the residual stalls. Emit them by default for any long or unattended run — they cost nothing and each closes a real failure.
-
-- **Cross-session continuity.** A terminal dies, a laptop sleeps, a session is closed. Resume, don't relaunch: `/resume [session]` (`/continue`) in-session; from a fresh terminal `claude -c` (continue last) or `claude -r "<session>"`. The standing `/goal` and hooks persist with the session. After resuming, `/recap` then re-ground (goal + progress file + repo state) before acting.
-- **Never stall on permissions.** Auto mode's classifier still blocks escalations. Pass the mission's allowlist on the launch line — `--allowedTools "Edit,Write,Bash(git *),Bash(make *)"` (space before `*`) — so nothing pauses; `/fewer-permission-prompts` can generate that list from past transcripts and `/permissions` persists it. Prefer the flag: it keeps the launch to one line.
-- **Model-outage self-heal.** Launch with `--fallback-model sonnet,haiku` so a provider outage mid-run degrades to a fallback instead of halting a multi-day mission.
-- **Bounded completion, enforced.** `--max-budget-usd <n>` is the CLI bound (there is no `--max-turns` on 2.1.221 — verify on yours); pair it with the `/goal` condition's own round cap so the run terminates even if the goal evaluator never fires.
-- **Detached running.** `/background [prompt]` (`/bg`) detaches the mission to a background session so it keeps running; `/tasks` (`/bashes`) to watch, `/stop` to kill.
-- **Gates the assistant runs itself** (all model-invocable, weave inline): `/code-review [level] --fix` and `/security-review` on the diff; `/verify` / `/run` to build, run, and observe that the change actually works — this is the rendered/end-to-end evidence layer, use it whenever the deliverable is runnable; `/simplify` as a final cleanup pass when the diff is large. Match gate to deliverable; don't stack all of them on a one-file change.
-- **Recovery.** `/rewind` (`/checkpoint`, `/undo`) is the native "return to a known-good point" — the AgentRewind pattern from `long-horizon-autonomy.md`. It is human-triggered; the run's own recovery is bounded retry + git. Name `/rewind` under `Harness controls` as the operator's lever.
-- **Durable memory.** `/memory` and auto-memory (`autoMemoryEnabled`) hold facts that should outlive the mission; keep volatile run state in the progress file and durable facts in memory — never volatile state as durable truth.
-- **Hooks.** `/goal` needs hooks enabled; `/hooks` (or `.claude/settings.json` `hooks`) also installs the deterministic Stop-hook gate (exit 2 blocks the turn from ending). Say "hooks enabled" under `Harness controls`.
-
-## Version & recency caveats (verify against the installed build)
-
-- Renames: `Task` tool → **`Agent`**; workflow keyword `workflow` → **`ultracode`** (v2.1.160); `/ultrareview` → **`/code-review ultra`**, `/review` → **`/code-review`**; `/ultraplan` removed; `TeamCreate`/`TeamDelete` removed (teammates spawn via the Agent tool).
-- Version-gated: workflows ≥2.1.154 (Pro needs `/config` opt-in), `/effort ultracode` ≥2.1.203, cross-session messaging ≥2.1.224 (macOS/Linux only), `/subtask` fork ≥2.1.212.
-- Platform-gated: no auto-mode-default on Bedrock/Vertex/Foundry; `/code-review ultra` needs claude.ai auth.
-- Experimental/preview: agent teams (env flag), cloud routines, `/loop`.
-
-## Worked example — an autonomous run
-
-Raw: "build a AAA game, fan out subagents on each system, /loop until each is perfect, a harsh critic compares blind side-by-side vs the real game and keeps going, ultracode." Becomes one self-driving mission — no plan mode, no approval pause, no operator note:
-
-- Open with `ultracode` to fan each subsystem out to its own workflow agent at full effort; run in auto mode so it never pauses.
-- One standing goal ends the run: `/goal every subsystem passes its blind side-by-side critic with zero AAA-blocking gaps; keep working across context windows, save progress to progress.md, never stop on token budget — or stop after N rounds per subsystem`.
-- Engine the prompt describes: a subagent builds each subsystem (worktree-isolated); a fresh critic subagent compares each render blind against reference frames and names every gap; the builder fixes and resubmits until the critic is empty; `/code-review` the diff before finishing. The goal condition, not a human, decides done.
-- Hard boundary: local/branch only, nothing published.
+- Renames: `Task` tool became `Agent`; workflow keyword `workflow` became `ultracode` (v2.1.160); `/ultrareview` became `/code-review ultra`, `/review` became `/code-review`; `/ultraplan` removed; `TeamCreate` and `TeamDelete` removed (teammates spawn through the Agent tool).
+- Version gated: workflows from 2.1.154 (Pro needs the `/config` opt in), `/effort ultracode` from 2.1.203, cross session messaging from 2.1.224 (macOS and Linux only), `/subtask` fork from 2.1.212. No `--max-turns` as of 2.1.221.
+- Platform gated: auto mode is the Pro, Max, and Team default since 2026-08-14, but not on Bedrock, Vertex, or Foundry; `/code-review ultra` needs claude.ai auth.
+- Experimental or preview: agent teams, cloud routines, `/loop`.

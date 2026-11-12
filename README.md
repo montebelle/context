@@ -58,7 +58,7 @@ Optional controls (all inferred when unstated):
 | `operation` | `explain` · `rewrite` · `diagnose` · `fix` · `execute` · `review` |
 | `constraints` | hard requirements to preserve |
 | `delivery` | `auto` (default) · `inline` · `file` |
-| `orchestrate` | `auto` (default: on for any imperative task) · `on` · `off` — force or suppress the autonomous-run rewrite + Launch block |
+| `orchestrate` | `auto` (default: sized to the task, off for questions and one step edits, Focused for one area, Broad for several areas or long runs) · `on` · `off`: force or suppress the autonomous run rewrite and Launch block |
 
 Examples:
 
@@ -92,15 +92,15 @@ References load only when the route needs them:
 
 | Reference | Loads when |
 |---|---|
-| [`references/evidence-standard.md`](prompt/references/evidence-standard.md) | rewriting complex, reusable, agentic, or consequential prompts |
+| [`references/evidence-standard.md`](prompt/references/evidence-standard.md) | the target is reusable or production, a system, skill, tool, or evaluation prompt, security sensitive, model specific, or `mode: critique` or `variants` |
 | [`references/task-adapters.md`](prompt/references/task-adapters.md) | selecting the task adapter |
-| [`references/harness-orchestration.md`](prompt/references/harness-orchestration.md) | Claude Code autonomous-run controls (`/goal`, `ultracode`, subagents, auto mode) |
+| [`references/harness-orchestration.md`](prompt/references/harness-orchestration.md) | orchestration resolves Focused or Broad on Claude Code, or a Claude Code control is named |
 | [`references/codex-adapter.md`](prompt/references/codex-adapter.md) | the executing/target harness is Codex/GPT |
 | [`references/openclaw-adapter.md`](prompt/references/openclaw-adapter.md) | the executing/target harness is OpenClaw |
-| [`references/long-horizon-autonomy.md`](prompt/references/long-horizon-autonomy.md) | the run spans long horizons / must survive compaction, clearing, or restart |
-| [`references/context-graph-loop.md`](prompt/references/context-graph-loop.md) | the mission is code work — per-task execution loop + loop breakers |
+| [`references/long-horizon-autonomy.md`](prompt/references/long-horizon-autonomy.md) | a Broad orchestrated mission (must survive compaction, clearing, or restart) |
+| [`references/context-graph-loop.md`](prompt/references/context-graph-loop.md) | an orchestrated mission is code work: per task execution loop and loop breakers |
 | [`references/rpi-adapter.md`](prompt/references/rpi-adapter.md) | primary adapter is RPI delivery — multi-file work where an unproven premise is the main risk |
-| [`references/claude-code-commands.md`](prompt/references/claude-code-commands.md) | a specific Claude Code command/flag must be named exactly |
+| [`references/claude-code-commands.md`](prompt/references/claude-code-commands.md) | a Claude Code command or flag not covered by the orchestration reference must be named exactly |
 | [`references/evaluation-protocol.md`](prompt/references/evaluation-protocol.md) | reusable/production prompts, or `mode: variants` |
 
 **Orchestration is harness-split.** The neutral defaults (fan-out, one whole-mission completion condition, never-pause, review gates) bind to Claude Code as `ultracode` + a standing `/goal` + auto mode + `/code-review`; on Codex/GPT they map to sandbox/approval modes and `codex exec`, with the degradations stated honestly (no goal-gate, no in-session subagents, no cloud review).
@@ -133,7 +133,7 @@ References load only when the route needs them:
 
 ## Extending
 
-- **Add a go-to prompt** — add a `## slug` heading and its body to [`prompt/PROMPTS.md`](prompt/PROMPTS.md). It's immediately invocable by slug.
+- **Add a go-to prompt** — add a `## slug` heading and its body to [`prompt/PROMPTS.md`](prompt/PROMPTS.md). Add the slug to the library list in [`prompt/SKILL.md`](prompt/SKILL.md) so it matches without opening the library.
 - **Add a reference** — drop a file in `prompt/references/` and add a one-line "loads when" pointer in [`prompt/SKILL.md`](prompt/SKILL.md).
 - **Change routing** — edit the routes or step list in [`prompt/SKILL.md`](prompt/SKILL.md); the reference files stay conditional.
 

@@ -13,7 +13,7 @@ Use for reusable, production, high-cost, or variant-comparison prompts.
 7. Run deterministic validators first: exact strings, schemas, paths, required fields, forbidden authority expansion, and approval boundaries.
 8. Blind human or calibrated model graders to variant identity for intent preservation, completeness, usefulness, concision, and evidence-layer correctness.
 9. Score prompt quality separately from downstream task and harness quality.
-10. Confirm the selected variant on a fresh holdout.
+10. Select the smallest, cheapest variant that clears every quality and safety threshold, then confirm it on a fresh holdout.
 
 ## Metrics
 

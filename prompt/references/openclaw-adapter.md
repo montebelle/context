@@ -4,7 +4,7 @@ Sibling to `harness-orchestration.md` (Claude Code) and `codex-adapter.md` (Code
 
 OpenClaw is closer to Claude Code than Codex is: it loads `SKILL.md` files natively, has real in-session sub-agents, a Docker/Podman sandbox, and native compaction with an automatic save-to-memory reminder. The prompt-improving logic in `SKILL.md` needs no adapter; only the orchestration controls below do.
 
-Caveat: OpenClaw moves fast (three renames in ~3 months) — verify flags and config keys against the installed build (`openclaw --version`) and docs.openclaw.ai. Real security (sandbox, approvals, network controls) lives in the framework, not in prompt words.
+Caveat: OpenClaw moves fast (three renames in ~3 months) — verify flags and config keys against the installed build (`openclaw --version`) and docs.openclaw.ai.
 
 ## Concept → binding
 
@@ -14,6 +14,7 @@ Caveat: OpenClaw moves fast (three renames in ~3 months) — verify flags and co
 | Never pause / run unattended | auto mode (`--permission-mode auto`) | Exec-policy: `openclaw exec-policy preset yolo` (security `full`, ask `off`, askFallback `full`), or `openclaw config set tools.exec.mode full` + `tools.exec.ask off`. Prompting modes are `off` / `on-miss` / `always`; security modes `deny` / `allowlist` / `full`. Keep `full`/`yolo` only inside a disposable sandbox. |
 | Persist until a completion condition | one standing `/goal <condition>` (Stop-hook, model-judged) | The Agent Runtime runs a recursive ReAct loop that schedules and completes the task (tracked on a task/Kanban board). There is no external transcript-judged goal-gate — express the completion condition in the prompt and bound it; the loop, not a Stop-hook, decides done. |
 | Fan-out / parallelism | subagents (Agent tool), workflows, `ultracode` | Native sub-agents: `sessions_spawn` (non-blocking, returns a run id; params `task`, `agentId`, `model`, `context`). Isolated child transcript by default, or `context: "fork"` to branch the parent's. Parent waits with `sessions_yield`; children announce results back. Limits: `maxConcurrent` (8), `maxChildrenPerAgent` (5), `maxSpawnDepth`. |
+| Fresh context per phase (Broad) | a fresh workflow agent or subagent per phase, handing off through the progress file | an isolated `sessions_spawn` child per phase that reads the memory file and a short handoff |
 | Review / verify gate | `/code-review`, `/security-review`, a critic subagent | No built-in review command. Spawn an isolated critic via `sessions_spawn` (clean context) on the diff, and/or run tests/linters via exec inside the sandbox. |
 | Repository guidance / durable memory | `CLAUDE.md` | Loaded `SKILL.md` files plus the Memory & Knowledge System — memory files, RAG via the memorySearch provider (LM Studio native), and a "Shared Knowledge" skill for cross-agent memory. No single repo-root guidance file is documented. |
 | Add tools | `/mcp`, settings | Plug-ins & Skills System — install skills/plugins from clawhub.ai or a local plugin directory. |

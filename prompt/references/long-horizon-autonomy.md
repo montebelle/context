@@ -1,47 +1,44 @@
-# Long-horizon autonomy
+# Long horizon autonomy
 
-Load when an emitted orchestration prompt must run unattended across long horizons (hours to weeks) — long enough that the context window will be summarized, cleared, or restarted at least once. This is harness-neutral decision guidance; the per-harness bindings live in `harness-orchestration.md` (Claude Code) and `codex-adapter.md` (Codex/GPT).
+Read for a Broad orchestrated mission (`SKILL.md`, Orchestration sizing): a run that may last hours to weeks, long enough that its context will be summarized, cleared, or restarted at least once. Harness neutral; the bindings live in `harness-orchestration.md` (Claude Code), `codex-adapter.md` (Codex/GPT), and `openclaw-adapter.md` (OpenClaw). A Focused mission carries only the one resume line from `SKILL.md`.
 
-Premise: a long run's context is neither durable nor uniformly reliable. Every frontier model degrades as the window fills — accuracy drops even when the needed fact is still present, and worst when it sits mid-context ("lost in the middle") [context-rot; LOCA-bench]. So the emitted prompt must make the run survive its own context loss, prove its own work, and recover from its own failures. State each of these as explicit instructions in the prompt; do not assume the model does them unprompted.
+## The long run survival block (emit this)
 
-## 1. Durable external state
+The emitted prompt carries one compact block, in its static part, instructing the run to:
 
-In-context history is a narrative about state, not state — compaction rewrites it. Instruct the run to keep one external progress file as source of truth: append-only decisions, remaining work, and the last-good checkpoint. Rewrite the live plan each cycle so it sits at the end of context where attention is strongest, and keep the file recoverable rather than complete (store a path / URL / id, not the raw blob) [Anthropic; Manus].
+- (a) keep one durable progress file as the source of truth;
+- (b) after any compaction, clear, or restart, reground from the goal, the progress file, and current state before acting, and continue from the first unchecked item;
+- (c) prove each phase against an objective check, verified in a fresh context;
+- (d) on failure, self heal with bounded retry, log the cause, then escalate; never delete or weaken a check to pass;
+- (e) keep steps idempotent with resumable checkpoints;
+- (f) end on a bounded completion condition the run visibly demonstrates, with a round cap;
+- (g) run each phase or slice in a fresh agent that starts from the progress file plus a 1k to 2k token handoff, write bulky output to files, and hand off at about 150k tokens of context rather than carrying one agent through the run.
 
-## 2. Compaction & context-loss survival
+Bind each item to the harness. On a harness without a goal gate or subagents, state the degradation; do not assume the primitive exists.
 
-Assume the window will be compacted or the session restarted mid-run. Compaction summarizes and reinitializes — it should keep architectural decisions, open bugs, and implementation details and drop redundant tool outputs [Anthropic]. The prompt must tell the agent to **re-ground after any compaction or restart before acting**: re-read the goal, the progress file, and current repo/live state; never continue from a summary alone. Restate the goal and hard invariants where compaction cannot strip them — the standing completion condition, repository guidance, and the progress-file header [Slipstream].
+## Why each item is there
 
-## 3. Self-verification
+Premise: a long run's context is neither durable nor uniformly reliable. Every frontier model degrades as the window fills, even when the needed fact is still present, and worst when it sits mid context ("lost in the middle") [context rot; LOCA-bench]. Cost grows the same way: each request rereads the whole window. So the prompt must make the run survive its own context loss, prove its own work, and recover from its own failures, stated explicitly; do not assume the model does them unprompted.
 
-Each phase ends by proving itself against an objective check — tests, schema, build, or a fresh critic with a clean context reviewing the diff — never self-assertion. "Done" requires evidence the run visibly produced. Isolate verification in a sub-agent or clean window so a polluted context cannot rubber-stamp its own work [Anthropic (sub-agents); CORAL].
+1. **Durable external state.** In context history is a narrative about state, not state; compaction rewrites it. The progress file holds append only decisions, remaining work, and the last good checkpoint. Rewrite the live plan each cycle so it sits at the end of context where attention is strongest, and keep the file recoverable rather than complete (store a path, URL, or id, not the raw blob) [Anthropic; Manus].
+2. **Compaction survival.** Compaction should keep architectural decisions, open bugs, and implementation details and drop redundant tool output [Anthropic]. Never continue from a summary alone. Restate the goal and hard invariants where compaction cannot strip them: the standing completion condition, repository guidance, and the progress file header [Slipstream].
+3. **Self verification.** Tests, schema, build, or a fresh critic with a clean context reviewing the diff; never self assertion. Isolate verification so a polluted context cannot rubber stamp its own work [Anthropic (subagents); CORAL]. Scale the number of critics to the size and risk of the phase.
+4. **Self healing.** Monitor, detect, diagnose, bounded retry or backoff, escalate; a detect, diagnose, recover, verify loop beats retry only and blind replanning [Self Healing Orchestrators]. A standing completion gate invites weakening checks, so forbid it.
+5. **Resumability.** Idempotent, checkpointed steps resume without redo or double write; aligned checkpoints (agent state plus environment) let the run return to a known good point after a bad branch [AgentRewind]. A one shot that dies at 90% loses everything; a checkpointed run loses one step.
+6. **Pacing and termination.** Checkpoint on a fixed cadence (per phase or per N actions); "save progress and continue in a fresh context" crosses context boundaries; the completion condition plus a hard stop bounds the run, or it never returns. Treat externalizing working memory as an explicit step [CORAL; Externalization review]. Make the run auditable: an inspectable per phase trace (what ran, the evidence, the checkpoint); where the harness supports OpenTelemetry GenAI spans, instrument tool and model calls, otherwise the progress file is the trace [OTel GenAI conventions].
+7. **Fresh context over long lived agents.** Subagents that return 1k to 2k token summaries and write bulky output to files keep each window small [Anthropic context engineering; multi agent research system]. A fresh agent per phase pays one new prefix instead of rereading an ever growing window on every request.
 
-## 4. Self-healing
-
-On a failed check or error, run monitor → detect → diagnose → bounded retry/backoff → escalate, and log each failure and its cause to the progress file so a retry does not repeat it. A detect-diagnose-recover-verify loop beats retry-only and blind replanning on reliability [Self-Healing Orchestrators]. Never weaken or delete a check to make it pass — a standing completion gate invites exactly that shortcut, so forbid it in the prompt.
-
-## 5. Resumability & one-shot design
-
-Design steps to be idempotent and checkpointed so an interrupted run resumes without redo or double-write; record aligned checkpoints (agent state + environment) so the run can return to a known-good point after a bad branch [AgentRewind]. Prefer resumable iteration over a fragile single pass — a one-shot that dies at 90% loses everything, a checkpointed run loses one step.
-
-## 6. Pacing & termination
-
-Checkpoint on a fixed cadence (per phase, or per N actions), continue across context and budget boundaries ("save progress and continue; do not stop on token budget"), and bound the mission with a completion condition the run visibly demonstrates plus a hard stop — without the bound it never returns. Treat externalizing working memory / checkpoints as an explicit agent step, not an afterthought [CORAL; Externalization review]. Make the run auditable, not just resumable: emit an inspectable per-phase trace (what ran, the evidence, the checkpoint) so an operator can replay how a multi-hour run reached its state; where the harness supports OpenTelemetry GenAI spans, instrument tool and model calls, otherwise the progress file IS the trace [OTel GenAI conventions].
-
-Tactical companion: `context-graph-loop.md` supplies the per-task execution loop and concrete loop breakers (action budget, repetition limit, context-percentage and compaction-count escalation) that make sections 3–6 operational inside a single task.
-
-## Emitting the "long-run survival" block
-
-When SKILL.md step 10 flags a long-horizon or unattended run, the emitted prompt must carry a compact block instructing: (a) write and maintain a durable progress file; (b) re-ground from goal + progress + state after any compaction; (c) self-verify each phase against an objective check; (d) self-heal with bounded retry, then escalate; (e) idempotent, resumable checkpoints; (f) a bounded completion condition. Bind these to the harness via the two references above. On a harness without a goal-gate or sub-agents, state the degradation — do not assume the primitive exists.
+`context-graph-loop.md` makes items 3 to 6 operational inside a single code task (execution loop and loop breakers).
 
 ## Sources
 
-- Anthropic, *Effective context engineering for AI agents* — compaction, structured note-taking, sub-agents. https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
-- *Context rot* (Chroma, 2025) and *LOCA-bench* (arXiv 2602.07962) — degradation as context grows; lost-in-the-middle.
-- Manus, *context-engineering lessons* (2025) — file system as durable state; recoverable-not-complete; plan kept at end of context.
-- *Slipstream: Trajectory-Grounded Compaction Validation for Long-Horizon Agents* — arXiv 2605.08580.
-- *Self-Healing Agentic Orchestrators for Reliable Tool-Augmented LLM Systems* — arXiv 2606.01416.
-- *AgentRewind: Recoverable Execution for Long-Horizon LLM Agents* — arXiv 2608.14380.
-- *CORAL: Cognitive Resource Self-Allocation* ("Don't Lose the Thread") — OpenReview NBGlItueYE.
-- *Externalization in LLM Agents: A Unified Review* — arXiv 2604.08224.
-- OpenTelemetry GenAI semantic conventions — portable trace/span attributes for agent runs. https://opentelemetry.io/docs/specs/semconv/gen-ai/
+- Anthropic, *Effective context engineering for AI agents*: compaction, structured note taking, subagents. https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
+- Anthropic, *How we built our multi-agent research system*: token multiples, subagent output to files. https://www.anthropic.com/engineering/multi-agent-research-system
+- *Context rot* (Chroma, 2025) and *LOCA-bench* (arXiv 2602.07962): degradation as context grows; lost in the middle.
+- Manus, *context engineering lessons* (2025): file system as durable state; recoverable, not complete; plan kept at end of context.
+- *Slipstream: Trajectory-Grounded Compaction Validation for Long-Horizon Agents*, arXiv 2605.08580.
+- *Self-Healing Agentic Orchestrators for Reliable Tool-Augmented LLM Systems*, arXiv 2606.01416.
+- *AgentRewind: Recoverable Execution for Long-Horizon LLM Agents*, arXiv 2608.14380.
+- *CORAL: Cognitive Resource Self-Allocation* ("Don't Lose the Thread"), OpenReview NBGlItueYE.
+- *Externalization in LLM Agents: A Unified Review*, arXiv 2604.08224.
+- OpenTelemetry GenAI semantic conventions. https://opentelemetry.io/docs/specs/semconv/gen-ai/
