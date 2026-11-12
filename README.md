@@ -22,7 +22,7 @@ One skill, two harnesses — not a fork. The routing, adapter, evidence, and del
 - **Task adapters** — one primary adapter per task (coding, infra, research, UI, agentic, evaluation, …) instead of one generic template. → [`prompt/references/task-adapters.md`](prompt/references/task-adapters.md)
 - **Evidence standard** — a primary-source stance on what actually makes prompts reliable, used as decision guidance. → [`prompt/references/evidence-standard.md`](prompt/references/evidence-standard.md)
 - **Harness-portable orchestration** — autonomous-run defaults expressed as neutral concepts, bound to Claude Code, Codex/GPT, or OpenClaw controls. → [`prompt/references/harness-orchestration.md`](prompt/references/harness-orchestration.md), [`prompt/references/codex-adapter.md`](prompt/references/codex-adapter.md), [`prompt/references/openclaw-adapter.md`](prompt/references/openclaw-adapter.md)
-- **Long-horizon survival** — long/unattended prompts teach durable progress, re-grounding after compaction, self-verification, and self-healing, grounded in current research. → [`prompt/references/long-horizon-autonomy.md`](prompt/references/long-horizon-autonomy.md)
+- **Long run survival**: every Focused or Broad prompt carries the survival block in `SKILL.md` (durable progress, regrounding after compaction, self verification, self healing). Rationale and sources: [`prompt/references/long-horizon-autonomy.md`](prompt/references/long-horizon-autonomy.md)
 - **Delivery & truncation guards** — size-aware delivery (inline vs verified file handoff) so a prompt is never silently cut. → [`prompt/SKILL.md`](prompt/SKILL.md)
 - **Go-to prompt library** — named base prompts you invoke by slug; the skill expands and re-grounds them so you never re-paste a wall of text. → [`prompt/PROMPTS.md`](prompt/PROMPTS.md)
 - **Semantic + lexical case retriever** — ollama (`nomic-embed-text`) embeddings when a local server is reachable, automatic BM25 fallback otherwise; still dependency-free (built-in `fetch`). → [`prompt/scripts/retrieve-cases.js`](prompt/scripts/retrieve-cases.js)
@@ -97,7 +97,7 @@ References load only when the route needs them:
 | [`references/harness-orchestration.md`](prompt/references/harness-orchestration.md) | orchestration resolves Focused or Broad on Claude Code, or a Claude Code control is named |
 | [`references/codex-adapter.md`](prompt/references/codex-adapter.md) | the executing/target harness is Codex/GPT |
 | [`references/openclaw-adapter.md`](prompt/references/openclaw-adapter.md) | the executing/target harness is OpenClaw |
-| [`references/long-horizon-autonomy.md`](prompt/references/long-horizon-autonomy.md) | a Broad orchestrated mission (must survive compaction, clearing, or restart) |
+| [`references/long-horizon-autonomy.md`](prompt/references/long-horizon-autonomy.md) | rarely: it holds only the rationale and sources for the survival block, which lives in `SKILL.md` |
 | [`references/context-graph-loop.md`](prompt/references/context-graph-loop.md) | an orchestrated mission is code work: per task execution loop and loop breakers |
 | [`references/rpi-adapter.md`](prompt/references/rpi-adapter.md) | primary adapter is RPI delivery — multi-file work where an unproven premise is the main risk |
 | [`references/claude-code-commands.md`](prompt/references/claude-code-commands.md) | a Claude Code command or flag not covered by the orchestration reference must be named exactly |
